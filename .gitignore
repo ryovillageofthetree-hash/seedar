@@ -1,0 +1,18 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Node（将来 npm を使う場合に備えて）
+node_modules/
+npm-debug.log*
+
+# OneDrive 同期の一時ファイル
+*~
+~$*
+
+# ローカル開発用
+.cache/
+.tmp/

@@ -1,0 +1,31 @@
+{
+  "crops": [
+    {
+      "crop_id": "radish",
+      "crop_name_ja": "ラディッシュ",
+      "sowing_methods": ["row", "point"],
+      "row_sowing": {
+        "row_count": 2,
+        "row_spacing_cm": 5,
+        "plant_spacing_cm": 1,
+        "long_edge_margin_cm": 1,
+        "placement_rule": "internal"
+      },
+      "point_sowing": {
+        "spacing_cm": 5,
+        "long_edge_margin_cm": 2,
+        "seeds_per_hole": 3,
+        "seed_arrangement": "triangle",
+        "triangle_side_cm": 1,
+        "short_side_holes": {
+          "size_S": 2,
+          "size_L": 3
+        }
+      },
+      "thinning_size_cm": null,
+      "harvest_size_cm": null,
+      "thinning_model_path": null,
+      "harvest_model_path": null
+    }
+  ]
+}

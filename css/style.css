@@ -1,0 +1,245 @@
+/* 種まき支援AR — 全画面共通スタイル
+   仕様書 §5.3 デザイン原則：
+   - 文字 18px 以上（タイトル 32px 以上）
+   - ボタン 縦60px × 横200px 以上
+   - 緑系を基調 */
+
+:root {
+  --green-bg: #E8F5E9;
+  --green-light: #C8E6C9;
+  --green-primary: #43A047;
+  --green-dark: #1B5E20;
+  --green-hover: #66BB6A;
+  --brown-soil: #8D6E63;
+  --brown-soil-dark: #5D4037;
+  --text: #1F2937;
+  --text-muted: #6B7280;
+  --white: #FFFFFF;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: system-ui, "Yu Gothic UI", "Meiryo", "Hiragino Kaku Gothic ProN", sans-serif;
+  font-size: 18px;
+  line-height: 1.7;
+  background: var(--green-bg);
+  color: var(--text);
+  -webkit-text-size-adjust: 100%;
+}
+
+main {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 32px 16px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  min-height: 100vh;
+}
+
+/* タイトル画面 */
+.title-main {
+  font-size: 56px;
+  font-weight: 800;
+  color: var(--green-dark);
+  text-align: center;
+  margin: 48px 0 0;
+  letter-spacing: 0.04em;
+}
+.title-sub {
+  font-size: 20px;
+  color: var(--text-muted);
+  text-align: center;
+  margin: 0 0 24px;
+}
+
+/* 各画面の見出し */
+.heading {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--green-dark);
+  text-align: center;
+  margin: 16px 0 8px;
+}
+
+/* メインボタン（はじめる用） */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 240px;
+  min-height: 72px;
+  padding: 16px 40px;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--white);
+  background: var(--green-primary);
+  border: none;
+  border-radius: 16px;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--green-dark);
+  transition: background-color 120ms ease, transform 80ms ease, box-shadow 80ms ease;
+}
+.btn-primary:hover { background: var(--green-hover); }
+.btn-primary:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--green-dark); }
+.btn-primary:focus-visible { outline: 3px solid #FFD54F; outline-offset: 3px; }
+
+/* もどるボタン */
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 200px;
+  min-height: 60px;
+  padding: 12px 32px;
+  margin-top: 24px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--green-dark);
+  background: var(--white);
+  border: 2px solid var(--green-dark);
+  border-radius: 12px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+.btn-back:hover { background: var(--green-light); }
+.btn-back:focus-visible { outline: 3px solid #FFD54F; outline-offset: 3px; }
+.btn-back::before { content: "← "; }
+
+/* 選択肢グリッド（プランター・播種方法） */
+.choice-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  width: 100%;
+}
+@media (max-width: 560px) {
+  .choice-grid { grid-template-columns: 1fr; }
+}
+
+.choice-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  min-height: 220px;
+  padding: 20px;
+  background: var(--white);
+  border: 3px solid var(--green-primary);
+  border-radius: 16px;
+  text-decoration: none;
+  color: var(--text);
+  cursor: pointer;
+  transition: background-color 120ms ease, transform 80ms ease, box-shadow 80ms ease;
+  box-shadow: 0 4px 0 rgba(67, 160, 71, 0.4);
+}
+.choice-btn:hover { background: var(--green-bg); }
+.choice-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(67, 160, 71, 0.4); }
+.choice-btn:focus-visible { outline: 3px solid #FFD54F; outline-offset: 3px; }
+
+.choice-btn .label {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin-top: 4px;
+}
+.choice-btn .sub {
+  font-size: 16px;
+  color: var(--text-muted);
+}
+.choice-btn svg {
+  width: 100%;
+  max-width: 200px;
+  height: auto;
+  display: block;
+}
+
+/* ふりがな */
+ruby rt {
+  font-size: 0.55em;
+  color: var(--text-muted);
+}
+
+/* ============================================================
+   AR 表示画面（ar.html 専用）
+   - a-scene はビューポートいっぱい（z-index 0）
+   - HTML の UI（ステータス・情報・もどる）は z-index 100 でオーバーレイ
+   ============================================================ */
+body.ar-body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #000;
+}
+body.ar-body main { display: none; }
+
+a-scene {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+}
+
+.ar-status {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 92vw;
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--green-dark);
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  z-index: 100;
+}
+.ar-status-found {
+  background: var(--green-primary);
+  color: var(--white);
+}
+.ar-status-error {
+  background: #FFCDD2;
+  color: #B71C1C;
+}
+
+.ar-info {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 92vw;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.65);
+  color: var(--white);
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  z-index: 100;
+  text-align: center;
+}
+
+.ar-back {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  margin: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.94);
+}
+.ar-back:hover { background: var(--white); }

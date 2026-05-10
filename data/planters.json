@@ -1,0 +1,18 @@
+{
+  "planters": [
+    {
+      "planter_id": "size_S",
+      "name_ja": "ミニプランター",
+      "inner_length_cm": 38,
+      "inner_width_cm": 14,
+      "inner_depth_cm": 18
+    },
+    {
+      "planter_id": "size_L",
+      "name_ja": "標準プランター",
+      "inner_length_cm": 60,
+      "inner_width_cm": 20,
+      "inner_depth_cm": 20
+    }
+  ]
+}

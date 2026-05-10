@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>calculator.js — 単体テスト</title>
+  <style>
+    body { font-family: system-ui, "Yu Gothic UI", "Meiryo", sans-serif; max-width: 980px; margin: 24px auto; padding: 0 16px; color: #222; line-height: 1.6; }
+    h1 { font-size: 22px; margin: 0 0 8px; }
+    .summary { padding: 12px 16px; border-radius: 8px; margin: 12px 0 24px; font-weight: bold; }
+    .summary.ok { background: #E8F5E9; color: #1B5E20; border: 1px solid #66BB6A; }
+    .summary.ng { background: #FFEBEE; color: #B71C1C; border: 1px solid #E57373; }
+    table { border-collapse: collapse; width: 100%; font-size: 14px; }
+    th, td { border: 1px solid #ddd; padding: 6px 10px; vertical-align: top; }
+    th { background: #f5f5f5; text-align: left; }
+    tr.pass td.judge { background: #E8F5E9; color: #1B5E20; font-weight: bold; }
+    tr.fail td.judge { background: #FFEBEE; color: #B71C1C; font-weight: bold; }
+    tr.fail td.detail { color: #B71C1C; }
+    code { font-family: Consolas, "Courier New", monospace; background: #f5f5f5; padding: 1px 4px; border-radius: 3px; }
+    h2 { font-size: 16px; margin-top: 28px; border-bottom: 2px solid #66BB6A; padding-bottom: 4px; }
+    .desc { color: #555; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+<h1>calculator.js 単体テスト</h1>
+<p class="desc">仕様書 §3.2.3〜§3.2.4 の算出ロジックを検証します。このページをブラウザで開くだけでテストが実行されます（ローカルサーバー不要）。</p>
+
+<div id="summary" class="summary">テスト実行中…</div>
+
+<h2>テスト結果</h2>
+<table>
+  <thead><tr><th>#</th><th>テスト</th><th>判定</th><th>詳細</th></tr></thead>
+  <tbody id="results"></tbody>
+</table>
+
+<script src="../js/calculator.js"></script>
+<script>
+// 仕様書 §4.1・§4.2 のサンプルそのまま（data/*.json と同内容）
+var CROPS = {
+  crops: [{
+    crop_id: "radish", crop_name_ja: "ラディッシュ",
+    sowing_methods: ["row", "point"],
+    row_sowing: { row_count: 2, row_spacing_cm: 5, plant_spacing_cm: 1, long_edge_margin_cm: 1, placement_rule: "internal" },
+    point_sowing: { spacing_cm: 5, long_edge_margin_cm: 2, seeds_per_hole: 3, seed_arrangement: "triangle", triangle_side_cm: 1, short_side_holes: { size_S: 2, size_L: 3 } },
+    thinning_size_cm: null, harvest_size_cm: null, thinning_model_path: null, harvest_model_path: null
+  }]
+};
+var PLANTERS = {
+  planters: [
+    { planter_id: "size_S", name_ja: "ミニプランター", inner_length_cm: 38, inner_width_cm: 14, inner_depth_cm: 18 },
+    { planter_id: "size_L", name_ja: "標準プランター", inner_length_cm: 60, inner_width_cm: 20, inner_depth_cm: 20 }
+  ]
+};
+
+var radish = Calculator.findCropById(CROPS, "radish");
+var sizeS = Calculator.findPlanterById(PLANTERS, "size_S");
+var sizeL = Calculator.findPlanterById(PLANTERS, "size_L");
+
+var tests = [];
+function test(name, fn) { tests.push({ name: name, fn: fn }); }
+
+function eq(a, b) { return a === b; }
+function near(a, b, eps) { return Math.abs(a - b) < (eps == null ? 1e-6 : eps); }
+function arrayEq(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+  for (var i = 0; i < a.length; i++) if (!near(a[i], b[i])) return false;
+  return true;
+}
+
+// ---------- すじまき ----------
+test("size_S すじまき：合計72株（2条×36株）", function () {
+  var r = Calculator.calculateRowSowing(radish, sizeS);
+  if (!eq(r.totalCount, 72)) throw new Error("total=" + r.totalCount);
+  if (!eq(r.rowCount, 2)) throw new Error("rowCount=" + r.rowCount);
+  if (!eq(r.plantsPerRow, 36)) throw new Error("plantsPerRow=" + r.plantsPerRow);
+  return "総数=72, 条数=2, 1条株数=36";
+});
+
+test("size_S すじまき：条 y 座標 [4.5, 9.5]", function () {
+  var r = Calculator.calculateRowSowing(radish, sizeS);
+  if (!arrayEq(r.rowYs, [4.5, 9.5])) throw new Error("rowYs=" + JSON.stringify(r.rowYs));
+  return "rowYs=[4.5, 9.5]（短辺余白4.5cm×2）";
+});
+
+test("size_S すじまき：株 x 座標は 2〜37cm の 1cm 刻み 36 個", function () {
+  var r = Calculator.calculateRowSowing(radish, sizeS);
+  if (r.plantXs.length !== 36) throw new Error("len=" + r.plantXs.length);
+  if (r.plantXs[0] !== 2 || r.plantXs[35] !== 37) throw new Error("first=" + r.plantXs[0] + " last=" + r.plantXs[35]);
+  for (var i = 1; i < 36; i++) {
+    if (!near(r.plantXs[i] - r.plantXs[i-1], 1)) throw new Error("step at " + i);
+  }
+  return "plantXs[0]=2, plantXs[35]=37, 等間隔1cm";
+});
+
+test("size_L すじまき：合計116株（2条×58株）", function () {
+  var r = Calculator.calculateRowSowing(radish, sizeL);
+  if (!eq(r.totalCount, 116)) throw new Error("total=" + r.totalCount);
+  if (!eq(r.plantsPerRow, 58)) throw new Error("plantsPerRow=" + r.plantsPerRow);
+  return "総数=116, 1条株数=58";
+});
+
+test("size_L すじまき：条 y 座標 [7.5, 12.5]", function () {
+  var r = Calculator.calculateRowSowing(radish, sizeL);
+  if (!arrayEq(r.rowYs, [7.5, 12.5])) throw new Error("rowYs=" + JSON.stringify(r.rowYs));
+  return "rowYs=[7.5, 12.5]（短辺余白7.5cm×2）";
+});
+
+test("size_L すじまき：株 x 座標は 2〜59cm の 1cm 刻み 58 個", function () {
+  var r = Calculator.calculateRowSowing(radish, sizeL);
+  if (r.plantXs.length !== 58) throw new Error("len=" + r.plantXs.length);
+  if (r.plantXs[0] !== 2 || r.plantXs[57] !== 59) throw new Error("first=" + r.plantXs[0] + " last=" + r.plantXs[57]);
+  return "plantXs[0]=2, plantXs[57]=59";
+});
+
+// ---------- 点まき ----------
+test("size_S 点まき：14穴・42粒（2列×7行×3粒）", function () {
+  var r = Calculator.calculatePointSowing(radish, sizeS);
+  if (r.totalHoles !== 14) throw new Error("totalHoles=" + r.totalHoles);
+  if (r.totalSeeds !== 42) throw new Error("totalSeeds=" + r.totalSeeds);
+  if (r.longHoles !== 7 || r.shortHoles !== 2) throw new Error("long=" + r.longHoles + " short=" + r.shortHoles);
+  return "穴数=14, 粒数=42, 長辺=7穴, 短辺=2列";
+});
+
+test("size_S 点まき：穴 x 座標 [2,7,12,17,22,27,32]", function () {
+  var r = Calculator.calculatePointSowing(radish, sizeS);
+  if (!arrayEq(r.holeXs, [2,7,12,17,22,27,32])) throw new Error("holeXs=" + JSON.stringify(r.holeXs));
+  return "holeXs=[2,7,12,17,22,27,32]";
+});
+
+test("size_S 点まき：穴 y 座標 [4.5, 9.5]（短辺余白4.5cm×2）", function () {
+  var r = Calculator.calculatePointSowing(radish, sizeS);
+  if (!arrayEq(r.holeYs, [4.5, 9.5])) throw new Error("holeYs=" + JSON.stringify(r.holeYs));
+  return "holeYs=[4.5, 9.5]";
+});
+
+test("size_L 点まき：36穴・108粒（3列×12行×3粒）", function () {
+  var r = Calculator.calculatePointSowing(radish, sizeL);
+  if (r.totalHoles !== 36) throw new Error("totalHoles=" + r.totalHoles);
+  if (r.totalSeeds !== 108) throw new Error("totalSeeds=" + r.totalSeeds);
+  if (r.longHoles !== 12 || r.shortHoles !== 3) throw new Error("long=" + r.longHoles + " short=" + r.shortHoles);
+  return "穴数=36, 粒数=108, 長辺=12穴, 短辺=3列";
+});
+
+test("size_L 点まき：穴 x 座標 [2,7,12,17,22,27,32,37,42,47,52,57]", function () {
+  var r = Calculator.calculatePointSowing(radish, sizeL);
+  if (!arrayEq(r.holeXs, [2,7,12,17,22,27,32,37,42,47,52,57])) throw new Error("holeXs=" + JSON.stringify(r.holeXs));
+  return "holeXs=[2,7,12,17,22,27,32,37,42,47,52,57]";
+});
+
+test("size_L 点まき：穴 y 座標 [5, 10, 15]（短辺余白5cm×2）", function () {
+  var r = Calculator.calculatePointSowing(radish, sizeL);
+  if (!arrayEq(r.holeYs, [5, 10, 15])) throw new Error("holeYs=" + JSON.stringify(r.holeYs));
+  return "holeYs=[5, 10, 15]";
+});
+
+// ---------- 三角形配置 ----------
+test("三角形オフセット：辺の長さがすべて 1cm（一辺1cmの正三角形）", function () {
+  var t = Calculator._internal.computeTriangleOffsets(3, 1);
+  if (t.length !== 3) throw new Error("length=" + t.length);
+  function dist(a, b) { var dx = a.x - b.x, dy = a.y - b.y; return Math.sqrt(dx*dx + dy*dy); }
+  var d01 = dist(t[0], t[1]), d12 = dist(t[1], t[2]), d20 = dist(t[2], t[0]);
+  if (!near(d01, 1) || !near(d12, 1) || !near(d20, 1)) {
+    throw new Error("d01=" + d01.toFixed(4) + " d12=" + d12.toFixed(4) + " d20=" + d20.toFixed(4));
+  }
+  return "3辺すべて 1.0000cm";
+});
+
+test("三角形オフセット：重心が原点（中心）", function () {
+  var t = Calculator._internal.computeTriangleOffsets(3, 1);
+  var cx = (t[0].x + t[1].x + t[2].x) / 3;
+  var cy = (t[0].y + t[1].y + t[2].y) / 3;
+  if (!near(cx, 0) || !near(cy, 0)) throw new Error("centroid=(" + cx + "," + cy + ")");
+  return "重心 = (0, 0)";
+});
+
+test("点まき：各穴に必ず3粒が割り当てられる（size_L）", function () {
+  var r = Calculator.calculatePointSowing(radish, sizeL);
+  var counts = {};
+  r.seedPositions.forEach(function (s) { counts[s.holeIndex] = (counts[s.holeIndex] || 0) + 1; });
+  for (var i = 0; i < r.totalHoles; i++) {
+    if (counts[i] !== 3) throw new Error("hole " + i + " has " + counts[i] + " seeds");
+  }
+  return "全 36 穴とも 3 粒ずつ割り当て済み";
+});
+
+// ---------- ラッパー / ヘルパー ----------
+test("calculateSowing：method='row' は calculateRowSowing と同じ結果", function () {
+  var a = Calculator.calculateRowSowing(radish, sizeS);
+  var b = Calculator.calculateSowing(radish, sizeS, "row");
+  if (a.totalCount !== b.totalCount) throw new Error("dispatch failed");
+  return "ディスパッチ成功（row → row）";
+});
+
+test("calculateSowing：method='point' は calculatePointSowing と同じ結果", function () {
+  var a = Calculator.calculatePointSowing(radish, sizeS);
+  var b = Calculator.calculateSowing(radish, sizeS, "point");
+  if (a.totalHoles !== b.totalHoles) throw new Error("dispatch failed");
+  return "ディスパッチ成功（point → point）";
+});
+
+test("calculateSowing：未知の method はエラーを投げる", function () {
+  var threw = false;
+  try { Calculator.calculateSowing(radish, sizeS, "broadcast"); } catch (e) { threw = true; }
+  if (!threw) throw new Error("did not throw");
+  return "想定通り例外を送出";
+});
+
+test("findCropById / findPlanterById：存在する ID は対象を返す", function () {
+  var c = Calculator.findCropById(CROPS, "radish");
+  var p = Calculator.findPlanterById(PLANTERS, "size_L");
+  if (!c || c.crop_id !== "radish") throw new Error("crop not found");
+  if (!p || p.planter_id !== "size_L") throw new Error("planter not found");
+  return "ラディッシュ・size_L をそれぞれ取得";
+});
+
+test("findCropById / findPlanterById：存在しない ID は null を返す", function () {
+  if (Calculator.findCropById(CROPS, "tomato") !== null) throw new Error("crop not null");
+  if (Calculator.findPlanterById(PLANTERS, "size_XL") !== null) throw new Error("planter not null");
+  return "両方とも null を返す";
+});
+
+// ---------- 実行 ----------
+var pass = 0, fail = 0;
+var tbody = document.getElementById("results");
+tests.forEach(function (t, i) {
+  var tr = document.createElement("tr");
+  var detail = "";
+  var ok = true;
+  try {
+    detail = t.fn() || "";
+  } catch (e) {
+    ok = false;
+    detail = "❌ " + e.message;
+  }
+  tr.className = ok ? "pass" : "fail";
+  if (ok) pass++; else fail++;
+  tr.innerHTML =
+    "<td>" + (i+1) + "</td>" +
+    "<td>" + t.name + "</td>" +
+    "<td class='judge'>" + (ok ? "✅ PASS" : "❌ FAIL") + "</td>" +
+    "<td class='detail'>" + detail + "</td>";
+  tbody.appendChild(tr);
+});
+
+var sum = document.getElementById("summary");
+if (fail === 0) {
+  sum.className = "summary ok";
+  sum.textContent = "✅ 全 " + tests.length + " テスト成功（PASS=" + pass + " / FAIL=0）";
+} else {
+  sum.className = "summary ng";
+  sum.textContent = "❌ " + fail + " 件失敗（PASS=" + pass + " / FAIL=" + fail + " / 合計=" + tests.length + "）";
+}
+</script>
+
+</body>
+</html>
