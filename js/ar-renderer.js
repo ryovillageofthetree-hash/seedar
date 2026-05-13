@@ -2,12 +2,16 @@
    仕様書 §3.2.5 に基づき、マーカーを基準にプランター上面の3D座標系を構築し、
    算出された播種位置に円柱（直径8mm × 高さ5mm）を配置する。
 
+   マーカー設置（v1.1：プランター外設置に変更）:
+     プランターのリップ（巻き込み）でマーカーが隠れる問題を避けるため、
+     マーカーはプランター手前の机の上に置く運用に変更。
+     `assets/markers/print.html` の配置シートを使うと、プランター前縁から
+     マーカー中心まで MARKER_FRONT_OFFSET_CM (= 10cm) の距離が確保される。
+
    座標変換（cm → A-Frame m）:
-     マーカーは「プランター長辺の手前中央、土の表面」に貼付し、
-     マーカー上辺をプランター長辺と平行にする。
-       ar_x = (planter_x - 長辺長/2) / 100   …長辺方向（マーカー右が +x）
-       ar_y = 円柱高さ/2 + 微小オフセット      …マーカー面から少し上
-       ar_z = -planter_y / 100               …プランター奥は -z 方向 */
+     ar_x = (planter_x - 長辺長/2) / 100              …長辺方向（マーカー右が +x）
+     ar_y = 円柱高さ/2 + 微小オフセット                …マーカー面から少し上
+     ar_z = -(planter_y + MARKER_FRONT_OFFSET_CM)/100 …プランター奥は -z 方向 */
 
 (function () {
   'use strict';
@@ -20,6 +24,10 @@
   var CYL_H = 0.005;     // 高さ 5mm
   var Y_OFFSET = 0.0005; // 0.5mm 浮かせて Z-fighting 回避
   var OPACITY = 0.5;
+
+  // マーカーは「プランター前縁から 10cm 前方」の机上に置く（リップの陰を避ける）。
+  // 実機でズレが気になる場合は、この値を 8〜12 の間で微調整できる。
+  var MARKER_FRONT_OFFSET_CM = 10;
 
   function getParam(name) {
     return new URLSearchParams(location.search).get(name);
@@ -95,7 +103,7 @@
     for (var i = 0; i < positions.length; i++) {
       var p = positions[i];
       var ax = (p.x - halfLen) / 100;
-      var az = -p.y / 100;
+      var az = -(p.y + MARKER_FRONT_OFFSET_CM) / 100;
       var ay = CYL_H / 2 + Y_OFFSET;
 
       var cyl = document.createElement('a-cylinder');

@@ -2,45 +2,26 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <title>ARマーカー印刷ページ｜種まき支援AR</title>
+  <title>ARマーカー設置シート｜種まき支援AR</title>
   <style>
-    /* 画面プレビュー時の見栄え */
+    /* ============ 画面プレビュー用スタイル ============ */
     body {
       font-family: system-ui, "Yu Gothic UI", "Meiryo", sans-serif;
-      max-width: 720px;
-      margin: 24px auto;
-      padding: 0 16px;
+      margin: 0;
+      padding: 24px;
+      background: #f5f5f5;
       color: #222;
       line-height: 1.7;
     }
-    h1 { color: #1B5E20; }
-    .marker-frame {
-      display: inline-block;
-      padding: 5mm;
-      border: 2px dashed #ccc;
-      margin: 24px 0;
+    .instructions {
+      max-width: 760px;
+      margin: 0 auto 24px;
+      background: white;
+      padding: 24px 32px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
-    .marker-frame img {
-      width: 50mm;
-      height: 50mm;
-      display: block;
-    }
-    .ruler {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 12px;
-      color: #555;
-      margin-top: 4px;
-    }
-    .ruler::before {
-      content: "";
-      display: inline-block;
-      width: 50mm;
-      height: 1px;
-      background: #555;
-      position: relative;
-    }
+    .instructions h1 { color: #1B5E20; margin-top: 0; }
     .note {
       background: #FFF8E1;
       border-left: 4px solid #FFB300;
@@ -48,44 +29,239 @@
       margin: 16px 0;
       border-radius: 4px;
     }
+    .print-btn {
+      display: inline-block;
+      font-size: 18px;
+      padding: 12px 32px;
+      background: #43A047;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .print-btn:hover { background: #66BB6A; }
 
-    /* 印刷時：マーカーを正確に 50mm × 50mm で出力 */
+    /* プレビュー用：紙の見栄え */
+    .sheet {
+      width: 210mm;
+      height: 297mm;
+      margin: 24px auto;
+      background: white;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      position: relative;
+      box-sizing: border-box;
+    }
+
+    /* ============ 印刷時のレイアウト（A4 縦・等倍）============ */
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
     @media print {
-      body { margin: 0; padding: 0; max-width: none; }
+      body {
+        margin: 0;
+        padding: 0;
+        background: white;
+      }
       .no-print { display: none !important; }
-      .marker-frame { border: none; padding: 0; margin: 20mm; }
-      .marker-frame img { width: 50mm; height: 50mm; }
-      @page { size: A4 portrait; margin: 0; }
+      .sheet {
+        margin: 0;
+        box-shadow: none;
+        page-break-after: always;
+      }
+    }
+
+    /* ============ シート内部の要素配置 ============
+       A4 縦 = 210mm × 297mm
+       y=0(上端) → y=297(下端)
+       上半分：プランター本体を置く領域
+       y=150mm：プランター前縁を合わせる線
+       y=250mm：マーカー中心（線から 100mm = 10cm 下）
+    */
+    .sheet-label-top {
+      position: absolute;
+      top: 12mm;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 14pt;
+      color: #555;
+    }
+    .planter-zone {
+      position: absolute;
+      top: 30mm;
+      left: 15mm;
+      right: 15mm;
+      height: 115mm;
+      border: 1.5mm dashed #C8E6C9;
+      border-bottom: none;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #66BB6A;
+      font-size: 14pt;
+      font-weight: bold;
+    }
+    .planter-zone-text {
+      text-align: center;
+      line-height: 1.5;
+    }
+    .alignment-line {
+      position: absolute;
+      top: 145mm;
+      left: 10mm;
+      right: 10mm;
+      height: 4mm;
+      background: #1B5E20;
+    }
+    .alignment-line::before, .alignment-line::after {
+      content: "";
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 0;
+      height: 0;
+      border-style: solid;
+    }
+    .alignment-line::before {
+      left: -6mm;
+      border-width: 2mm 6mm 2mm 0;
+      border-color: transparent #1B5E20 transparent transparent;
+    }
+    .alignment-line::after {
+      right: -6mm;
+      border-width: 2mm 0 2mm 6mm;
+      border-color: transparent transparent transparent #1B5E20;
+    }
+    .alignment-label {
+      position: absolute;
+      top: 152mm;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 14pt;
+      font-weight: bold;
+      color: #1B5E20;
+    }
+    .gap-label {
+      position: absolute;
+      top: 180mm;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 11pt;
+      color: #999;
+    }
+    .marker-label {
+      position: absolute;
+      top: 210mm;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 12pt;
+      font-weight: bold;
+      color: #1565C0;
+    }
+    .marker-img {
+      position: absolute;
+      top: 225mm;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50mm;
+      height: 50mm;
+    }
+    .ruler-tick {
+      position: absolute;
+      top: 280mm;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 10pt;
+      color: #999;
+    }
+    .ruler {
+      display: inline-block;
+      width: 50mm;
+      height: 6mm;
+      border: 0.3mm solid #999;
+      border-top: none;
+      position: relative;
+      vertical-align: middle;
+      margin: 0 8px;
+    }
+    .ruler::before {
+      content: "50mm";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 8pt;
+      color: #999;
+      background: white;
+      padding: 0 2px;
     }
   </style>
 </head>
 <body>
 
-<div class="no-print">
-  <h1>ARマーカー印刷ページ</h1>
-  <p>このページを A4 用紙に <strong>等倍（100%）で印刷</strong> すると、Hiroマーカーが <strong>50mm × 50mm（5cm四方）</strong>で印刷されます。</p>
+<!-- ============ 画面で見るときだけ表示される説明 ============ -->
+<div class="instructions no-print">
+  <h1>ARマーカー設置シート</h1>
+  <p>このページを A4 用紙に <strong>等倍（100%）で印刷</strong> し、机の上にそのまま敷いて使います。</p>
+
+  <h3>使い方</h3>
+  <ol>
+    <li>下のプレビュー（白い A4 サイズの紙）を、紙詰めや拡大縮小なしで <strong>1 枚に印刷</strong>します</li>
+    <li>印刷した紙を <strong>机の上にそのまま置きます</strong>（切ったり折ったりしません）</li>
+    <li>紙の上半分（緑の点線の領域）に <strong>プランターを置き</strong>、プランターの <strong>手前の長辺</strong>を、紙の濃い緑の線にぴったり合わせます</li>
+    <li>マーカー（紙の下半分にある白黒の四角）は <strong>そのまま机の上</strong>に残ります</li>
+    <li>Chromebook でアプリを開き、カメラで上から撮影します</li>
+  </ol>
 
   <div class="note">
     <strong>印刷時の注意：</strong><br>
     印刷ダイアログで「ページサイズに合わせて拡大／縮小」を <strong>オフ</strong>（または「実際のサイズ」「100%」）にしてください。
-    そうしないとマーカーが拡大・縮小され、AR表示が正しい寸法になりません。
+    そうしないとマーカーの寸法とプランターとの距離が変わり、AR表示の位置がズレます。
   </div>
 
-  <p>印刷後、マーカーをハサミで切り取り、プランター長辺の手前中央（土の表面）に、マーカーの上辺がプランター長辺と平行になるように貼り付けてください。</p>
+  <div class="note">
+    <strong>サイズ確認：</strong><br>
+    印刷後、マーカー（白黒の四角）の <strong>外枠が定規でぴったり 5cm × 5cm</strong> になっているか確認してください。
+    なっていない場合は印刷設定を見直して再印刷してください。
+  </div>
 
-  <hr>
-  <p style="color: #888; font-size: 14px;">↓ ここから下が印刷される領域です（プレビュー）</p>
+  <p>size_S（ミニ・38×14cm）でも size_L（標準・60×20cm）でも、<strong>このシート 1 枚で対応できます</strong>。プランターの後ろが紙からはみ出すのは問題ありません。</p>
+
+  <button class="print-btn" onclick="window.print()">印刷する</button>
+
+  <p style="color: #888; font-size: 14px; margin-top: 24px;">↓ 以下が印刷される A4 シートのプレビューです（白い紙の領域）</p>
 </div>
 
-<div class="marker-frame">
-  <img src="hiro.png" alt="Hiro AR marker">
-  <div class="ruler no-print">← 50mm（5cm）</div>
-</div>
+<!-- ============ 印刷される本体（A4 シート）============ -->
+<div class="sheet">
+  <div class="sheet-label-top">↑ この上にプランターを置きます（紙からはみ出してOK）</div>
 
-<div class="no-print">
-  <button onclick="window.print()" style="font-size: 18px; padding: 12px 32px; background: #43A047; color: white; border: none; border-radius: 8px; cursor: pointer;">
-    印刷する
-  </button>
+  <div class="planter-zone">
+    <div class="planter-zone-text">
+      🪴 プランター本体<br>
+      <small style="font-weight: normal; font-size: 11pt;">手前の長辺を下の濃い緑の線に合わせる</small>
+    </div>
+  </div>
+
+  <div class="alignment-line"></div>
+  <div class="alignment-label">↑ プランターの手前（長辺）をこの線に合わせる ↑</div>
+
+  <div class="gap-label">— ここから 10cm —</div>
+
+  <div class="marker-label">↓ ARマーカー（このまま机の上で使用） ↓</div>
+  <img class="marker-img" src="hiro.png" alt="Hiro AR marker">
+
+  <div class="ruler-tick">
+    寸法確認用：<span class="ruler"></span> ← 印刷後、ここが 5cm になっていればOK
+  </div>
 </div>
 
 </body>
