@@ -18,7 +18,8 @@
 - [`SPECIFICATION.md`](./SPECIFICATION.md) — 仕様書
 - [`DEPLOY.md`](./DEPLOY.md) — GitHub Pages へのデプロイ手順
 - [`DEVICE_TEST.md`](./DEVICE_TEST.md) — Chromebook 実機テストチェックリスト
-- [`LEARNING_NOTES.md`](./LEARNING_NOTES.md) — 中学生むけ「ホームページ公開のしくみ」解説
+- [`LEARNING_NOTES.md`](./LEARNING_NOTES.md) — 中学生むけ「ホームページ公開のしくみ」解説（テキスト版）
+- [`LEARNING_POSTER.html`](./LEARNING_POSTER.html) — 同上の **A4 1 枚レジュメ**（PDF 化用、Chrome で開いて Ctrl+P）
 - [`assets/markers/print.html`](./assets/markers/print.html) — ARマーカー設置シート（A4 印刷用）
 - [`tests/calculator.test.html`](./tests/calculator.test.html) — 計算ロジックの単体テスト
 
