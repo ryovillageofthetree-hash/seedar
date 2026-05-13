@@ -15,10 +15,11 @@
 
 ## 関連ドキュメント
 
-- [`SPECIFICATION.md`](./SPECIFICATION.md) — 仕様書 v1.2
+- [`SPECIFICATION.md`](./SPECIFICATION.md) — 仕様書
 - [`DEPLOY.md`](./DEPLOY.md) — GitHub Pages へのデプロイ手順
 - [`DEVICE_TEST.md`](./DEVICE_TEST.md) — Chromebook 実機テストチェックリスト
-- [`assets/markers/print.html`](./assets/markers/print.html) — ARマーカーの印刷ページ
+- [`LEARNING_NOTES.md`](./LEARNING_NOTES.md) — 中学生むけ「ホームページ公開のしくみ」解説
+- [`assets/markers/print.html`](./assets/markers/print.html) — ARマーカー設置シート（A4 印刷用）
 - [`tests/calculator.test.html`](./tests/calculator.test.html) — 計算ロジックの単体テスト
 
 ## ローカルで開く方法
