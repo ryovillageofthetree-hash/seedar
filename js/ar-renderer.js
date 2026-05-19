@@ -8,10 +8,16 @@
      `assets/markers/print.html` の配置シートを使うと、プランター前縁から
      マーカー中心まで MARKER_FRONT_OFFSET_CM (= 10cm) の距離が確保される。
 
-   座標変換（cm → A-Frame m）:
-     ar_x = (planter_x - 長辺長/2) / 100              …長辺方向（マーカー右が +x）
-     ar_y = 円柱高さ/2 + 微小オフセット                …マーカー面から少し上
-     ar_z = -(planter_y + MARKER_FRONT_OFFSET_CM)/100 …プランター奥は -z 方向 */
+   ★重要：AR.js のマーカー座標系は「1 単位 ≒ マーカーの実寸」であって
+     1 単位 = 1 メートル ではない。印刷マーカーは 5cm 四方なので
+     1 単位 = 5cm として cm→単位 を換算する（cmToUnit 関数）。
+     v1.0〜v1.1 は /100（メートル想定）で実装したため円柱が約 0.2mm になり
+     不可視だった。v1.2 でこの単位換算を修正。
+
+   座標変換（cm → AR.js マーカー単位, 1 単位 = 5cm）:
+     ar_x = cmToUnit(planter_x - 長辺長/2)                …長辺方向（マーカー右が +x）
+     ar_y = 円柱高さ/2 + 微小オフセット                    …マーカー面から少し上
+     ar_z = -cmToUnit(planter_y + MARKER_FRONT_OFFSET_CM) …プランター奥は -z 方向 */
 
 (function () {
   'use strict';
@@ -20,9 +26,16 @@
   var METHOD_NAMES = { row: 'すじまき', point: '点まき' };
   var COLOR_ROW = '#43A047';
   var COLOR_POINT = '#1565C0';
-  var CYL_R = 0.004;     // 直径 8mm → 半径 4mm
-  var CYL_H = 0.005;     // 高さ 5mm
-  var Y_OFFSET = 0.0005; // 0.5mm 浮かせて Z-fighting 回避
+
+  // AR.js では <a-marker> 内の「1 単位」がマーカー実寸に対応する。
+  // 印刷マーカーは 5cm 四方なので、1 単位 = 5cm として cm を単位に換算する。
+  var MARKER_SIZE_CM = 5;
+  function cmToUnit(cm) { return cm / MARKER_SIZE_CM; }
+
+  // 仕様書 §3.2.5：円柱 直径 8mm（半径 4mm）× 高さ 5mm、透過 50%
+  var CYL_R = cmToUnit(0.4);      // 半径 4mm
+  var CYL_H = cmToUnit(0.5);      // 高さ 5mm
+  var Y_OFFSET = cmToUnit(0.05);  // 0.5mm 浮かせて Z-fighting 回避
   var OPACITY = 0.5;
 
   // マーカーは「プランター前縁から 10cm 前方」の机上に置く（リップの陰を避ける）。
@@ -102,8 +115,8 @@
 
     for (var i = 0; i < positions.length; i++) {
       var p = positions[i];
-      var ax = (p.x - halfLen) / 100;
-      var az = -(p.y + MARKER_FRONT_OFFSET_CM) / 100;
+      var ax = cmToUnit(p.x - halfLen);
+      var az = -cmToUnit(p.y + MARKER_FRONT_OFFSET_CM);
       var ay = CYL_H / 2 + Y_OFFSET;
 
       var cyl = document.createElement('a-cylinder');
